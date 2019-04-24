@@ -1,0 +1,43 @@
+#Created by Jeremiah Alexander
+
+#Requires netaddr python module
+from netaddr import *
+
+#Collect User input
+base = input('Enter the base CIDR blocks, comma separated: ')
+base = base.split(",")
+
+exclude = input('Enter the CIDRs to exclude, comma separated: ')
+exclude = exclude.split(",")
+
+object_name = input('Enter what to name the objects: ')
+
+ip_set = IPSet()
+
+#Create the base group, then exclude the exclude group
+for cidr in base:
+        ip_set.add(cidr)
+
+for cidr in exclude:
+        ip_set.remove(cidr)
+
+#Create a group with all of the object names
+fortinet_group = object_name + "-1"
+for i in range(2,len(list(ip_set.iter_cidrs()))+1):
+    fortinet_group += " " + object_name + "-" + str(i)
+
+#Prent the Fortinet code to add the adddresses
+print ("config firewall address")
+
+for num, cidr in enumerate(ip_set.iter_cidrs(), start=1):
+        print("edit {}-{}".format(object_name, num))
+        print("set type ipmask")
+        print("set subnet {}".format(cidr))
+        print("set visibility disable")
+        print("next")
+
+print ("end")
+print ("config firewall addrgrp")
+print ("edit {}".format(object_name))
+print ("set member {}".format(fortinet_group))
+print ("end")
